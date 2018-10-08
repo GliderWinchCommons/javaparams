@@ -5,9 +5,6 @@
  */
 package derbytest;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.text.SimpleDateFormat;
 
 /**
@@ -43,6 +40,19 @@ public class DbPayload {
                     s += String.format("%02x ",cd.pb[i]);
                 }
                 cmsg.in_1int_n(1);
+                s += String.format("%8d",cmsg.p0);
+                break;
+                
+            case PccFinal.U32:
+                if (cd.dlc != 4){
+                         s  += String.format("ERR U32: dlc not eq 4 %d: ",cd.dlc);
+                         break;
+                }
+                s  += String.format("%d: ",cd.dlc);
+                    for (int i = 6 ; i < cd.dlc+6; i++){
+                    s += String.format("%02x ",cd.pb[i]);
+                }
+                cmsg.in_1int_n(0);
                 s += String.format("%8d",cmsg.p0);
                 break;
                 
@@ -96,8 +106,7 @@ public class DbPayload {
                 }  
                 s  += String.format("%02X ",cd.pb[6] );
                 break;
-                
-                
+                            
             case PccFinal.UNIXTIME: // Unix time U8_U32
                 cmsg.in_1int_n(1);  // Convert bytes to int
                 java.util.Date date= new java.util.Date(); // Get current date/time
@@ -116,6 +125,21 @@ public class DbPayload {
                 double f = Float.intBitsToFloat(cmsg.p0); // Convert int bits
                 s += String.format("%12.6f ", f);
                 break;
+                
+           case PccFinal.FF_FF:
+                if (cd.dlc != 8){
+                         s  += String.format("ERR U8_FF: dlc not eq 8 %d: ",cd.dlc);
+                         break;
+                }
+                s  += String.format("%d: ",cd.dlc);
+                cmsg.in_2int();  // Convert 8 bytes to two ints, p0, p1
+//s += String.format(" %08x %08x ",cmsg.p0,cmsg.p1);
+                f = Float.intBitsToFloat(cmsg.p0); // Convert int bits
+                s += String.format("%12.6f ", f);
+                f = Float.intBitsToFloat(cmsg.p1); // Convert int bits
+                s += String.format(" %12.6f ", f);
+                break;
+                
             case PccFinal.UNDEF:
                 s += String.format("Payload UNDEF ");
                 s += String.format("dlc:%02X: ",cd.dlc);
@@ -123,9 +147,9 @@ public class DbPayload {
                     s += String.format("%02x ",cd.pb[i]);
                 }
                 break;
-                
+              
             default: // Type not found
-                s ="cmi.pay_type_code: Type Not In final definitions";
+                s ="cmi.pay_type_code: Type Not In Pcc.Final definitions";
                 break;
         }       
         return s;
